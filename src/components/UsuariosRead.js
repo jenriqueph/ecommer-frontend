@@ -1,12 +1,10 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
-import Swal from 'sweetalert2'
-import axios from 'axios'
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-function UsuariosDelete () {
+function UsuariosRead() {
     const params = useParams();
-    const [dataUsuario, setdataUsuario] = useState([]);
-    const navegar = useNavigate();
+    const [dataUsuario, setdataUsuario] = useState([])
 
     useEffect(() => {
         axios.get('/api/usuarios/read/' + params._id).then(res => {
@@ -15,45 +13,6 @@ function UsuariosDelete () {
         }).catch(err => { console.log(err.stack) })
     }, [params._id]);
 
- 
-    function eliminarUsuario (idUsuario) {
-        Swal.fire({
-            title: '¿Estas Segur@?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: '¡Sí, eliminarlo!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                axios.delete('/api/usuarios/delete/' + idUsuario)
-                    .then(res => {
-                        Swal.fire(
-                            '¡Eliminado!',
-                            'El usuario ha sido eliminado.',
-                            'success'
-                        )
-                        console.log(res);
-                        navegar('/UsuariosList')
-                    }).catch(err => {
-                        Swal.fire(
-                            '¡Error!',
-                            'El usuario no se puedo eliminar. \n ' + err,
-                            'error'
-                        )
-                        console.log(err)
-                    })
-            } else {
-                Swal.fire(
-                    '¡Cancelado!',
-                    'El proceso fue cancelado.',
-                    'info'
-                )
-            }
-        })
-    }
-    
     return (
         <div className="container col-8">
             <div className="card border-info mb-3 m-4">
@@ -102,15 +61,9 @@ function UsuariosDelete () {
                                 value={dataUsuario.rol} />
                         </div>
 
-                        <div className="col-sm-3">
+                        <div className="col-sm-1 offset-2">
                             <a href="/UsuariosList" className="btn btn-dark btn-lg mt-4">Regresar</a>
                         </div>
-
-                        <form onSubmit={eliminarUsuario(dataUsuario._id)} className="col-sm-3">
-                            <div >
-                                <button type="submit" className="btn btn-danger btn-lg mt-4">Eliminar</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -118,4 +71,4 @@ function UsuariosDelete () {
     )
 }
 
-export default UsuariosDelete;
+export default UsuariosRead;

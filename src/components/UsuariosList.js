@@ -1,6 +1,5 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import './UsuariosList.css'
 import { Link } from 'react-router-dom';
 
 //Crear un método para trabajar
@@ -9,10 +8,10 @@ function UsuariosListar() {
     const [nombres, setNombres] = useState('')
     useEffect(() => {
         axios.get('api/usuarios/list').then(res => {
-            console.log(res.data);
             setdataUsuario(res.data);
         }).catch(err => { console.log(err.stack) })
-    }, [])
+    }, []);
+
     return (
         <div className='container mt-5'>
 
@@ -21,32 +20,30 @@ function UsuariosListar() {
                     <a className="navbar-brand" href="/">Gestionar Usuarios</a>
                     <div className="collapse navbar-collapse" id="navbarColor02">
                         <ul className="navbar-nav me-auto">
-                            <a className="btn btn-secondary my-2 my-sm-0" href="UsuariosCreate">Crear Usuario</a>
+                            <a id="btnUsuarioCreate" className="btn btn-secondary my-2 my-sm-0" href="/UsuariosCreate">Crear Usuario</a>
                         </ul>
                     </div>
                     <div className="collapse navbar-collapse" id="navbarColor02">
                         <input type="text" className="form-control me-sm-2" placeholder="Buscar por nombres" value={nombres} onChange={(e) => { setNombres(e.target.value) }}></input>
-                        <button className="btn btn-dark" type="submit">Buscar</button>
+                        <a id="btnBuscar" className="btn btn-dark" href="/">Buscar</a>
+                        {/*<button className="btn btn-dark" type="submit">Buscar</button> */}
                     </div>
                 </div>
             </nav>
 
-            <div class="table-responsive">
-                <table class="table table-striped-columns
+            <div className="table-responsive">
+                <table className="table table-striped-columns
                                         table-hover	
                                         table-borderless
                                         align-middle">
                     <caption>Usuarios oficiales Indetex© 2022®</caption>
                     <thead className="table-primary">
-                        <tr>
-                            <th>ID</th>
+                        <tr key='Cabecera'>
                             <th>NOMBRES</th>
                             <th>APELLIDOS</th>
                             <th>CARGO</th>
                             <th>EMAIL</th>
-                            <th>CONTRASEÑA</th>
                             <th>BLOQUEADO</th>
-                            <th>ROL</th>
                             <th>Detalle</th>
                             <th>Editar</th>
                             <th>Borrar</th>
@@ -55,34 +52,31 @@ function UsuariosListar() {
                     <tbody className="table-group-divider">
                         {
                             dataUsuario.map(misusuarios => (
-                                <tr className="table-active">
-                                    <td scope="row">{misusuarios._id}</td>
+                                <tr key={misusuarios._id} className="table-active">
                                     <td>{misusuarios.nombres}</td>
                                     <td>{misusuarios.apellidos}</td>
                                     <td>{misusuarios.cargo}</td>
                                     <td>{misusuarios.email}</td>
-                                    <td>{misusuarios.contrasenia}</td>
-                                    <td>{misusuarios.bloqueado}</td>
-                                    <td>{misusuarios.rol}</td>
+                                    <td>{misusuarios.bloqueado === false ? "NO" : "SI"}</td>
                                     <td>
-                                        <Link to={`/read/${misusuarios._id}`}>
-                                            <a className="btn btn-info">
+                                        <Link to={`/UsuariosRead/${misusuarios._id}`}>
+                                            <li className="btn btn-info">
                                                 <i className="fas fa-info-circle fa-lg"></i>
-                                            </a>
+                                            </li>
                                         </Link>
                                     </td>
                                     <td>
-                                        <Link to={`/read/${misusuarios._id}`}>
-                                            <a className="btn btn-success">
+                                        <Link to={`/UsuariosUpdate/${misusuarios._id}`}>
+                                            <li className="btn btn-success">
                                                 <i className="fas fa-address-book fa-lg"></i>
-                                            </a>
+                                            </li>
                                         </Link>
                                     </td>
                                     <td>
-                                        <Link to={`/read/${misusuarios._id}`}>
-                                            <a className="btn btn-danger">
+                                        <Link to={`/UsuariosDelete/${misusuarios._id}`}>
+                                            <li className="btn btn-danger">
                                                 <i className="fas fa-trash fa-lg"></i>
-                                            </a>
+                                            </li>
                                         </Link>
                                     </td>
                                 </tr>
@@ -90,8 +84,10 @@ function UsuariosListar() {
                         }
                     </tbody>
                     <tfoot className='tfoot-j'>
-                        <td colSpan={7}>Total</td>
-                        <td>reg?</td>
+                        <tr>
+                            <td key='total' colSpan={7}>Total</td>
+                            <td key='reg' >{dataUsuario.length}</td>
+                        </tr>
                     </tfoot>
                 </table>
             </div>

@@ -1,172 +1,260 @@
+import React, { useState } from 'react';
 import axios from "axios";
-import React, { useState } from "react";
-import Select from 'react-select';
-import uniqid from 'uniqid';
 import Swal from 'sweetalert2';
+import Input from './elements/Input';
+import { Formulario, Label, Select, GrupoInput } from '../elements/Formularios';
+import { useNavigate } from 'react-router-dom';
 
-const cargos = [
-    { id: '1', name: 'Administrador Junior' },
-    { id: '2', name: 'Administrador Senior' },
-    { id: '3', name: 'Administrador Elite' },
-    { id: '4', name: 'Asistente Administrativo' },
-    { id: '5', name: 'Aprendiz' }
-]
+const UsuariosCreate = () => {
+    const [nombres, setNombres] = useState({ campo: '', valido: null });
+    const [apellidos, setApellidos] = useState({ campo: '', valido: null });
+    const [cargo, setCargo] = useState({ campo: '', valido: null });
+    const [email, setEmail] = useState({ campo: '', valido: null });
+    const [password, setPassword] = useState({ campo: '', valido: null });
+    const [repassword, setRepassword] = useState({ campo: '', valido: null });
+    const [rol, setRol] = useState({ campo: 'Administrador', valido: 'true' });
+    const [bloqueado, setBloqueado] = useState(false);
+    
+    const navegar = useNavigate();
+    
+    const cargos = [
+        { id: '1', name: 'Administrador Junior' },
+        { id: '2', name: 'Administrador Senior' },
+        { id: '3', name: 'Administrador Elite' },
+        { id: '4', name: 'Asistente Administrativo' },
+        { id: '5', name: 'Aprendiz' }
+    ]
 
-function UsuariosCreate() {
-
-    //const [_id, setId] = useState('')
-    const [nombres, setNombres] = useState('')
-    const [apellidos, setApellidos] = useState('')
-    //const [cargo, setCargo] = useState('')
-    const [email, setEmail] = useState('')
-    const [contrasenia, setContrasenia] = useState('')
-    const [bloqueado, setBloqueado] = useState('')
-    const [rol, setRol] = useState('')
-
-    const [selectCargo, setSelectCargo] = useState();
-
-    const handleSelectChange = ({ value }) => {
-        setSelectCargo(value);
+    const expresiones = {
+        nombre: /^[a-zA-ZÀ-ÿ\s]{1,50}$/, //Letras y espacios, pueden llevar acentos.
+        password: /^.{4,12}$/, //4 a 12 digitos.
+        correo: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+        telefono: /^\d{7,14}$/, //7 a 14 números
+        usuario: /^[a-zA-Z0-9_-]{4,16}$/, //Letras, números, guion y gion_bajo
     }
 
-    function createUsuario() {
-        var usuario = {
-            _id: uniqid(),
-            nombres: nombres,
-            apellidos: apellidos,
-            cargo: selectCargo,
-            email: email,
-            contrasenia: contrasenia,
-            bloqueado: bloqueado,
-            rol: rol
-        };
-        console.log(usuario);
-        axios.post('api/usuarios/create', usuario)
-            .then(res => {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'Good job!' + res.data,
-                    showConfirmButton: false,
-                    timer: 2000
+    const validarPassword = () => {
+        if (password.campo.length > 0) {
+            if (password.campo !== repassword.campo) {
+                setRepassword((prevState) => {
+                    return { ...prevState, valido: 'false' }
+                });
+            } else {
+                setRepassword((prevState) => {
+                    return { ...prevState, valido: 'true' }
+                });
+            }
+        }
+    }
+
+    const onChangeBloqueado = (e) => {
+        setBloqueado(e.target.checked);
+    }
+
+    const handleSelectChange = (e) => {
+        setCargo({ ...cargo, campo: e.target.value, valido: 'true' });
+    }
+
+    const onSubmit = (e) => {
+        e.preventDefault();
+        if (nombres.valido === 'true' && apellidos.valido === 'true'
+            && cargo.valido === 'true' && email.valido === 'true'
+            && password.valido === 'true' && repassword.valido === 'true'
+            && rol.valido === 'true') {
+
+            var usuario = {
+                nombres: nombres.campo,
+                apellidos: apellidos.campo,
+                cargo: parseInt(cargo.campo),
+                email: email.campo,
+                contrasenia: password.campo,
+                bloqueado: bloqueado,
+                rol: 1
+            };
+
+            axios.post('api/usuarios/create', usuario)
+                .then(res => {
+                    setNombres({ campo: '', valido: null });
+                    setApellidos({ campo: '', valido: null });
+                    setCargo({ campo: '', valido: null });
+                    setEmail({ campo: '', valido: null });
+                    setPassword({ campo: '', valido: null });
+                    setRepassword({ campo: '', valido: null });
+                    setBloqueado(false);
+                    mensaje(true, "Formulario enviado exitosamente!" + res.data);
                 })
-            })
-            .then(err => { console.log(err) })
+                .then(err => { console.log(err) })
+        } else {
+            mensaje(false, "Por favor rellena el formulario correctamente");
+        }
+    }
+
+    function mensaje(valida, mensaje) {
+        if (valida) {
+            Swal.fire({
+                position: 'center',
+                icon: 'success',
+                title: 'Buen trabajo!',
+                text: mensaje,
+            });
+            navegar('/UsuariosList');
+        } else {
+            Swal.fire({
+                position: 'center',
+                icon: 'error',
+                title: 'Error',
+                text: mensaje,
+            });
+        }
     }
 
     return (
-        <div className="container">
-            <div className="card text-white bg-secondary mb-3 m-4">
-                <h2 className="card-header">Crear un nuevo Usuario</h2>
-                <div className="card-body">
-                    <div className="row">
-
-                        <form className="row g-3 needs-validation" novalidate>
-                            <div className="col-md-6">
-                                <label htmlfor="validationNombres" className="form-label">Nombres</label>
-                                <div className="input-group has-validation">
-                                    <span className="input-group-text" id="inputGroupPrepend">txt</span>
-                                    <input type="text" className="form-control" id="validationNombres" value={nombres} onChange={(e) => { setNombres(e.target.value) }} placeholder="Nombres" aria-describedby="inputGroupPrepend" autoFocus required />
-                                    <div className="invalid-feedback">
-                                        Los nombres son obligatorios!
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-md-6">
-                                <label htmlfor="validationApellidos" className="form-label">Apellidos</label>
-                                <div className="input-group has-validation">
-                                    <span className="input-group-text" id="inputGroupPrepend2">txt</span>
-                                    <input htmlfor="text" className="form-control" id="validationApellidos" value={apellidos} onChange={(e) => { setApellidos(e.target.value) }} placeholder="Apellidos" aria-describedby="inputGroupPrepend2" required />
-                                    <div className="invalid-feedback">
-                                        Los apellidos son obligatorios!
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-md-4">
-                                <label htmlfor="validationCargo" className="form-label">Cargo</label>
-                                <Select className="form-control" id="validationCargo"
-                                    //defaultValue = {{label : 'Eliga una opción', value : '0'} }
-                                    //defaultValue = { cargos[0] }
-                                    options={cargos.map(c => ({ label: c.name, value: c.id }))}
-                                    onChange={handleSelectChange}
-                                    theme={(theme) => ({
-                                        ...theme,
-                                        borderRadius: 0,
-                                        colors: {
-                                          ...theme.colors,
-                                          primary25: 'hotpink',
-                                          primary: 'blue',
-                                        },
-                                      })}
+        <main>
+            <div className="container">
+                <div className="card text-white bg-secondary mb-3 m-4">
+                    <h2 className="card-header">Crear un nuevo Usuario</h2>
+                    <div className="card-body">
+                        <div className="row">
+                            <Formulario className="row g-3" onSubmit={onSubmit}>
+                                <Input
+                                    estado={nombres}
+                                    setEstado={setNombres}
+                                    tipo="text"
+                                    label="Nombres"
+                                    placeholder="Nombres"
+                                    name="nombres"
+                                    leyendaError="El nombre es obligatorio, solo puede contener letras, espacios y un tamaño maximo de 50 caracteres."
+                                    expresionRegular={expresiones.nombre}
+                                    spanText="txt"
+                                    clase="col-sm-6"
+                                    focus={true}
+                                    lectura={false}
                                 />
-                                <div className="invalid-feedback">
-                                    Por favor seleccion una opción valida.
-                                </div>
-                            </div>
 
-                            <div className="col-md-8">
-                                <label htmlfor="validationCorreo" className="form-label">Correo Electrónico</label>
-                                <div className="input-group has-validation">
-                                    <span className="input-group-text" id="inputGroupPrepend3">@</span>
-                                    <input type="email" className="form-control" id="validationCorreo" value={email} onChange={(e) => { setEmail(e.target.value) }} placeholder="ejemplo@correo.com" aria-describedby="inputGroupPrepend3" required />
-                                    <div className="invalid-feedback">
-                                        Por favor ingrese un correo electrónico!
+                                <Input
+                                    estado={apellidos}
+                                    setEstado={setApellidos}
+                                    tipo="text"
+                                    label="Apellidos"
+                                    placeholder="Apellidos"
+                                    name="apellidos"
+                                    leyendaError="El apellido es obligatorio, solo puede contener letras, espacios y un tamaño maximo de 50 caracteres."
+                                    expresionRegular={expresiones.nombre}
+                                    spanText="txt"
+                                    clase="col-sm-6"
+                                    focus={false}
+                                    lectura={false}
+                                />
+
+                                <div className='col-sm-4'>
+                                    <Label htmlfor="cargo">Cargo</Label>
+                                    <GrupoInput>
+                                        <Select
+                                            className="form-select"
+                                            id="cargo"
+                                            onChange={handleSelectChange}
+                                            value={cargo.campo}
+                                        >
+                                            <option disabled value="">Selecione un cargo...</option>
+                                            {
+                                                cargos.map(c => (<option key={c.id} value={c.id}>{c.name}</option>))
+                                            }
+
+                                        </Select>
+                                    </GrupoInput>
+                                </div>
+
+                                <Input
+                                    estado={email}
+                                    setEstado={setEmail}
+                                    tipo="email"
+                                    label="Correo Electrónico"
+                                    placeholder="ejemplo@correo.com"
+                                    name="email"
+                                    leyendaError="El correo es obligatorio, solo puede contener letras, numeros, puntos, guiones y guion bajo."
+                                    expresionRegular={expresiones.correo}
+                                    spanText="@"
+                                    clase="col-sm-8"
+                                    focus={false}
+                                    lectura={false}
+                                />
+
+                                <Input
+                                    estado={password}
+                                    setEstado={setPassword}
+                                    tipo="password"
+                                    label="Contraseña"
+                                    placeholder="Password"
+                                    name="contrasenia"
+                                    leyendaError="La constraseña es obligatoria, tiene que ser de 4 a 12 digitos."
+                                    expresionRegular={expresiones.password}
+                                    spanText="***"
+                                    clase="col-sm-6"
+                                    focus={false}
+                                    lectura={false}
+                                />
+
+                                <Input
+                                    estado={repassword}
+                                    setEstado={setRepassword}
+                                    tipo="password"
+                                    label="Contraseña"
+                                    placeholder="Password"
+                                    name="recontrasenia"
+                                    leyendaError="Ambas constraseñas deben ser iguales."
+                                    funcion={validarPassword}
+                                    spanText="***"
+                                    clase="col-sm-6"
+                                    focus={false}
+                                    lectura={false}
+                                />
+
+                                <Input
+                                    estado={rol}
+                                    setEstado={setRol}
+                                    tipo="text"
+                                    label="Rol"
+                                    placeholder="Rol"
+                                    name="rol"
+                                    leyendaError="El apellido es obligatorio, solo puede contener letras, espacios y un tamaño maximo de 50 caracteres."
+                                    spanText="txt"
+                                    clase="col-sm-6"
+                                    focus={false}
+                                    lectura={true}
+                                />
+
+
+                                <div className="col-sm-2 offset-5">
+                                    <div className="form-check">
+                                        <Label className="form-check-label">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="validationCheck"
+                                                name="validationCheck"
+                                                checked={bloqueado}
+                                                onChange={onChangeBloqueado}
+                                            />
+                                            Bloqueado
+                                        </Label>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="col-md-6">
-                                <label htmlfor="validationContrasenia" className="form-label">Contraseña</label>
-                                <input type="password" className="form-control" value={contrasenia} onChange={(e) => { setContrasenia(e.target.value) }} placeholder="Password" id="validationContrasenia" required />
-                                <div className="invalid-feedback">
-                                    Por favor ingrese una contraseña.
+                                <div className="col-sm-6">
+                                    <a href="/UsuariosList" className="btn btn-dark btn-block">Cancelar</a>
                                 </div>
-                            </div>
-
-                            <div class="col-md-4 offset-1">
-                                <label htmlfor="validationRol" class="form-label">Rol</label>
-                                <select class="form-select" value={rol} onChange={(e) => { setRol(e.target.value) }} id="validationRol" required>
-                                    <option selected disabled value="">Selecione un rol...</option>
-                                    <option>Administrador</option>
-                                    <option>Cliente</option>
-                                </select>
-                                <div class="invalid-feedback">
-                                    Por favor seleccion una opción valida.
+                                <div className="col-sm-6">
+                                    <button className="btn btn-primary btn-block" type="submit">Guardar</button>
                                 </div>
-                            </div>
 
-                            <div className="col-2 offset-5">
-                                <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" value={bloqueado} onChange={(e) => { setBloqueado(e.target.value) }} id="invalidCheck" />
-                                    <label className="form-check-label" htmlfor="invalidCheck">
-                                        Bloqueado
-                                    </label>
-                                    <div className="invalid-feedback">
-                                        .
-                                    </div>
-                                </div>
-                            </div>
+                                <p className="card-text">Indetex e-commerce 2022®</p>
 
-                            <h5 className="card-title">Que desea hacer?</h5>
-                            <div className="col-sm-6">
-                                <a href="/UsuariosList" className="btn btn-dark btn-block">Cancelar</a>
-                            </div>
-                            <div className="col-sm-6">
-                                <button className="btn btn-primary btn-block" onClick={createUsuario} onSubmit="">Guardar</button>
-                            </div>
-
-                            <p className="card-text">Indetex e-commerce 2022®</p>
-                        </form>
-
+                            </Formulario>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    )
+        </main>
+    );
 }
-
-
 
 export default UsuariosCreate;
